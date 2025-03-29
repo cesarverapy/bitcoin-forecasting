@@ -9,7 +9,7 @@ from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
 import uvicorn
-from fastapi.responses import RedirectResponse
+
 
 # Load environment variables
 load_dotenv()
