@@ -54,7 +54,13 @@ export default function PowerLawChart({ data, timeframe, onTimeframeChange, isLo
     let filteredData = [...data.powerLawData]
     const now = new Date().getTime()
 
-    if (timeframe === "1Y") {
+    if (timeframe === "1W") {
+      const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000
+      filteredData = filteredData.filter((d: any) => d.timestamp >= oneWeekAgo)
+    } else if (timeframe === "1M") {
+      const oneMonthAgo = now - 30 * 24 * 60 * 60 * 1000
+      filteredData = filteredData.filter((d: any) => d.timestamp >= oneMonthAgo)
+    } else if (timeframe === "1Y") {
       const oneYearAgo = now - 365 * 24 * 60 * 60 * 1000
       filteredData = filteredData.filter((d: any) => d.timestamp >= oneYearAgo)
     } else if (timeframe === "5Y") {
@@ -108,10 +114,14 @@ export default function PowerLawChart({ data, timeframe, onTimeframeChange, isLo
       x: {
         type: "time",
         time: {
-          unit: timeframe === "1Y" ? "month" : "year",
+          unit: timeframe === "1W" ? "day" : 
+                timeframe === "1M" ? "week" : 
+                timeframe === "1Y" ? "month" : "year",
           displayFormats: {
-            month: "MMM yyyy", // Changed from YYYY to yyyy
-            year: "yyyy", // Changed from YYYY to yyyy
+            day: "MMM d",
+            week: "MMM d",
+            month: "MMM yyyy",
+            year: "yyyy",
           },
         },
         grid: {
@@ -174,7 +184,9 @@ export default function PowerLawChart({ data, timeframe, onTimeframeChange, isLo
             {useLogScale ? "Linear Scale" : "Log Scale"}
           </Button>
           <Tabs defaultValue={timeframe} onValueChange={onTimeframeChange}>
-            <TabsList className="grid grid-cols-3 w-[180px]">
+            <TabsList className="grid grid-cols-5 w-[300px]">
+              <TabsTrigger value="1W">1W</TabsTrigger>
+              <TabsTrigger value="1M">1M</TabsTrigger>
               <TabsTrigger value="1Y">1Y</TabsTrigger>
               <TabsTrigger value="5Y">5Y</TabsTrigger>
               <TabsTrigger value="All">All</TabsTrigger>
