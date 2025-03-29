@@ -45,72 +45,120 @@ interface PowerLawChartProps {
 export default function PowerLawChart({ data, timeframe, onTimeframeChange, isLoading }: PowerLawChartProps) {
   const [useLogScale, setUseLogScale] = useState(true)
   const [chartData, setChartData] = useState<any>(null)
+  const [filteredData, setFilteredData] = useState<any[]>([])
   const chartRef = useRef<any>(null)
 
   useEffect(() => {
     if (!data || !data.powerLawData) return
 
     // Filter data based on selected timeframe
-    let filteredData = [...data.powerLawData]
+    let filtered = [...data.powerLawData]
     const now = new Date().getTime()
 
     switch (timeframe) {
-      case "1D":
-        const oneDayAgo = now - 24 * 60 * 60 * 1000
-        filteredData = filteredData.filter((d: any) => d.timestamp >= oneDayAgo)
-        break
-      case "5D":
-        const fiveDaysAgo = now - 5 * 24 * 60 * 60 * 1000
-        filteredData = filteredData.filter((d: any) => d.timestamp >= fiveDaysAgo)
+      case "1W":
+        const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000
+        filtered = filtered.filter((d: any) => d.timestamp >= oneWeekAgo)
         break
       case "1M":
         const oneMonthAgo = now - 30 * 24 * 60 * 60 * 1000
-        filteredData = filteredData.filter((d: any) => d.timestamp >= oneMonthAgo)
+        filtered = filtered.filter((d: any) => d.timestamp >= oneMonthAgo)
         break
       case "1Y":
         const oneYearAgo = now - 365 * 24 * 60 * 60 * 1000
-        filteredData = filteredData.filter((d: any) => d.timestamp >= oneYearAgo)
+        filtered = filtered.filter((d: any) => d.timestamp >= oneYearAgo)
         break
       case "5Y":
         const fiveYearsAgo = now - 5 * 365 * 24 * 60 * 60 * 1000
-        filteredData = filteredData.filter((d: any) => d.timestamp >= fiveYearsAgo)
+        filtered = filtered.filter((d: any) => d.timestamp >= fiveYearsAgo)
         break
       case "MAX":
         // No filtering needed for maximum time period
         break
     }
 
+    setFilteredData(filtered)
+
     // Prepare data for Chart.js
-    const labels = filteredData.map((d: any) => new Date(d.timestamp))
+    const labels = filtered.map((d: any) => new Date(d.timestamp))
 
     setChartData({
       labels,
       datasets: [
         {
           label: "BTC Price",
-          data: filteredData.map((d: any) => ({
+          data: filtered.map((d: any) => ({
             x: new Date(d.timestamp),
             y: d.actualPrice,
           })),
           borderColor: "#3b82f6", // Blue
-          backgroundColor: "rgba(59, 130, 246, 0.1)",
+          backgroundColor: "transparent",
           borderWidth: 2,
           pointRadius: 0,
           pointHoverRadius: 4,
+          tension: 0.1,
+          order: 1,
         },
         {
           label: "Power Law Model",
-          data: filteredData.map((d: any) => ({
+          data: filtered.map((d: any) => ({
             x: new Date(d.timestamp),
             y: d.modelPrice,
           })),
           borderColor: "#F7931A", // Bitcoin orange
-          backgroundColor: "rgba(247, 147, 26, 0.1)",
-          borderWidth: 2,
-          borderDash: [5, 5],
+          backgroundColor: "transparent",
+          borderWidth: 1.5,
+          tension: 0.1,
+          borderDash: [3, 3],
           pointRadius: 0,
           pointHoverRadius: 0,
+          order: 2,
         },
+        {
+          label: "4-Year Cycles Min/Max",
+          data: filtered.map((d: any) => ({
+            x: new Date(d.timestamp),
+            y: d.modelPrice * 1.3, // Max value
+          })),
+          borderColor: "transparent",
+          backgroundColor: "rgba(59, 130, 246, 0.15)", // Light blue with more opacity
+          fill: {
+            target: {
+              value: filtered.map((d: any) => d.modelPrice * 0.7) // Min value
+            }
+          },
+          pointRadius: 0,
+          tension: 0.1,
+          order: 3,
+        },
+        {
+          label: "Peak Decay (Upper)",
+          data: filtered.map((d: any) => ({
+            x: new Date(d.timestamp),
+            y: d.modelPrice * 1.3,
+          })),
+          borderColor: "#22c55e", // Green color
+          borderWidth: 1.5,
+          tension: 0.1,
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          fill: false,
+          order: 4,
+        },
+        {
+          label: "Power Law (Lower)",
+          data: filtered.map((d: any) => ({
+            x: new Date(d.timestamp),
+            y: d.modelPrice * 0.7,
+          })),
+          borderColor: "#ef4444", // Red color
+          borderWidth: 1.5,
+          tension: 0.1,
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          fill: false,
+          order: 5,
+        }
       ],
     })
   }, [data, timeframe])
@@ -126,28 +174,38 @@ export default function PowerLawChart({ data, timeframe, onTimeframeChange, isLo
       x: {
         type: "time",
         time: {
-          unit: timeframe === "1D" || timeframe === "5D" ? "hour" : 
+          unit: timeframe === "1W" ? "day" : 
                 timeframe === "1M" ? "day" : 
                 timeframe === "1Y" ? "month" : "year",
           displayFormats: {
-            hour: "HH:mm",
             day: "MMM dd",
             month: "MMM yyyy",
             year: "yyyy",
           },
         },
         grid: {
-          display: false,
+          color: "rgba(255, 255, 255, 0.1)",
+          display: true
         },
+        ticks: {
+          maxRotation: 0,
+          color: "rgba(255, 255, 255, 0.7)"
+        }
       },
       y: {
-        type: useLogScale ? "logarithmic" : "linear",
+        type: "logarithmic",
         title: {
           display: true,
           text: "Price (USD)",
+          color: "rgba(255, 255, 255, 0.9)"
         },
         grid: {
           color: "rgba(255, 255, 255, 0.1)",
+          display: true
+        },
+        ticks: {
+          callback: (value) => formatUSD(value as number),
+          color: "rgba(255, 255, 255, 0.7)"
         },
       },
     },
@@ -157,11 +215,15 @@ export default function PowerLawChart({ data, timeframe, onTimeframeChange, isLo
         labels: {
           usePointStyle: true,
           boxWidth: 6,
+          color: "rgba(255, 255, 255, 0.9)",
+          padding: 20,
+          filter: (item) => item.text !== "4-Year Cycles Min/Max" // Hide the area dataset from legend
         },
       },
       tooltip: {
         callbacks: {
           label: (context) => {
+            if (context.dataset.label === "4-Year Cycles Min/Max") return ""
             const label = context.dataset.label || ""
             const value = formatUSD(context.parsed.y)
             return `${label}: ${value}`
@@ -196,9 +258,8 @@ export default function PowerLawChart({ data, timeframe, onTimeframeChange, isLo
             {useLogScale ? "Linear Scale" : "Log Scale"}
           </Button>
           <Tabs defaultValue={timeframe} onValueChange={onTimeframeChange}>
-            <TabsList className="grid grid-cols-6 w-[360px]">
-              <TabsTrigger value="1D">1D</TabsTrigger>
-              <TabsTrigger value="5D">5D</TabsTrigger>
+            <TabsList className="grid grid-cols-5 w-[300px]">
+              <TabsTrigger value="1W">1W</TabsTrigger>
               <TabsTrigger value="1M">1M</TabsTrigger>
               <TabsTrigger value="1Y">1Y</TabsTrigger>
               <TabsTrigger value="5Y">5Y</TabsTrigger>
@@ -208,7 +269,7 @@ export default function PowerLawChart({ data, timeframe, onTimeframeChange, isLo
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-[400px] w-full relative">
+        <div className="h-[500px] w-full relative">
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
