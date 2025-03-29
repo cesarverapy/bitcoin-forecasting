@@ -1,0 +1,69 @@
+// This is just an example structure for your Python backend API
+// You would implement this in Python, not JavaScript
+
+// Example Python FastAPI endpoint structure:
+/*
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+import numpy as np
+from datetime import datetime, timedelta
+import json
+
+app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust this in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Constants for the Power Law model
+POWER_LAW_CONSTANTS = {
+    "A": 0.0000058,
+    "B": 5.84,
+    "START_DATE": datetime(2009, 1, 3).timestamp() * 1000  # Bitcoin genesis block date
+}
+
+@app.get("/api/bitcoin-data")
+async def get_bitcoin_data():
+    # You could fetch real data from CoinGecko or another source here
+    # For now, we'll generate mock data similar to the JavaScript version
+    
+    now = datetime.now()
+    five_years_ago = now - timedelta(days=5*365)
+    
+    start_timestamp = five_years_ago.timestamp() * 1000
+    end_timestamp = now.timestamp() * 1000
+    
+    prices = []
+    power_law_data = []
+    
+    # Generate data points (one per week)
+    current_timestamp = start_timestamp
+    while current_timestamp <= end_timestamp:
+        days_since_start = (current_timestamp - POWER_LAW_CONSTANTS["START_DATE"]) / (1000 * 60 * 60 * 24)
+        model_price = POWER_LAW_CONSTANTS["A"] * (days_since_start ** POWER_LAW_CONSTANTS["B"])
+        
+        # Add some randomness to the actual price
+        random_factor = 0.7 + (np.random.random() * 0.6)  # Between 0.7 and 1.3
+        actual_price = model_price * random_factor
+        
+        prices.append([current_timestamp, actual_price])
+        power_law_data.append({
+            "timestamp": current_timestamp,
+            "actualPrice": actual_price,
+            "modelPrice": model_price
+        })
+        
+        # Move to next week
+        current_timestamp += 7 * 24 * 60 * 60 * 1000
+    
+    return {
+        "prices": prices,
+        "powerLawData": power_law_data
+    }
+*/
+
