@@ -36,3 +36,5 @@ next-env.d.ts
 .idea/
 *.swp
 .DS_Store
+
+.venv/
