@@ -21,6 +21,7 @@ import {
   type ChartOptions,
 } from "chart.js"
 import "chartjs-adapter-date-fns" // Import the date-fns adapter for time scale
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 // Register Chart.js components
 ChartJS.register(
@@ -47,6 +48,11 @@ export default function PowerLawChart({ data, timeframe, onTimeframeChange, isLo
   const [chartData, setChartData] = useState<any>(null)
   const [filteredData, setFilteredData] = useState<any[]>([])
   const chartRef = useRef<any>(null)
+  const [selectedYear, setSelectedYear] = useState<string>("2024")
+  const [years] = useState<string[]>(["2024", "2025", "2026", "2027", "2028"])
+  const [projectionMin, setProjectionMin] = useState(40299)
+  const [projectionMax, setProjectionMax] = useState(74841)
+  const [baseProjection, setBaseProjection] = useState(57570)
 
   useEffect(() => {
     if (!data || !data.powerLawData) return
@@ -249,23 +255,58 @@ export default function PowerLawChart({ data, timeframe, onTimeframeChange, isLo
     setUseLogScale(!useLogScale)
   }
 
+  const formatProjection = (value: number) => {
+    const formattedValue = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+      minimumFractionDigits: 0
+    }).format(value * 1000) // Multiply by 1000 to show in thousands
+    return formattedValue
+  }
+
+  const formatUSD = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+      minimumFractionDigits: 0
+    }).format(value)
+  }
+
   return (
     <Card className="w-full">
-      <CardHeader className="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
-        <CardTitle>Bitcoin Price vs. Power Law Model</CardTitle>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" onClick={toggleScale} className="text-xs">
-            {useLogScale ? "Linear Scale" : "Log Scale"}
-          </Button>
-          <Tabs defaultValue={timeframe} onValueChange={onTimeframeChange}>
-            <TabsList className="grid grid-cols-5 w-[300px]">
-              <TabsTrigger value="1W">1W</TabsTrigger>
-              <TabsTrigger value="1M">1M</TabsTrigger>
-              <TabsTrigger value="1Y">1Y</TabsTrigger>
-              <TabsTrigger value="5Y">5Y</TabsTrigger>
-              <TabsTrigger value="MAX">MAX</TabsTrigger>
-            </TabsList>
-          </Tabs>
+      <CardHeader className="flex flex-col space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
+          <CardTitle>Bitcoin Price Forecast</CardTitle>
+          <div className="flex items-center space-x-2">
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="w-[100px]">
+                <SelectValue>{selectedYear}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {years.map((year) => (
+                  <SelectItem key={year} value={year}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="space-y-1">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-muted-foreground">BTC projected to hit</span>
+            <span className="text-orange-500">
+              {formatProjection(projectionMin)} - {formatProjection(projectionMax)}
+            </span>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Base projection: {formatProjection(baseProjection)} (90% confidence interval)
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Based on Power Law model: price = A × (days^B)
+          </div>
         </div>
       </CardHeader>
       <CardContent>
