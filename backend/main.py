@@ -6,6 +6,7 @@ import numpy as np
 from typing import List, Dict, Any
 import requests
 from pydantic import BaseModel
+import uvicorn
 import os
 from dotenv import load_dotenv
 
