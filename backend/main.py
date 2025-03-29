@@ -9,13 +9,14 @@ from pydantic import BaseModel
 import uvicorn
 import os
 from dotenv import load_dotenv
+import uvicorn
+from fastapi.responses import RedirectResponse
 
 # Load environment variables
 load_dotenv()
 
 app = FastAPI(title="Bitcoin Power Law API")
-
-# Configure CORS
+# Cigure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://localhost:3001"],  # Allow both ports
@@ -26,8 +27,8 @@ app.add_middleware(
 
 # Power Law constants - recalibrated based on historical BTC prices
 POWER_LAW_CONSTANTS = {
-    "A": 0.0147,        # Base coefficient - adjusted for better historical fit
-    "B": 1.78,          # Growth exponent - calibrated to match long-term trend
+    "A": 0.0000058,     # Base coefficient - adjusted for better historical fit
+    "B": 5.84,          # Growth exponent - calibrated to match long-term trend
     "START_DATE": datetime(2009, 1, 3).timestamp() * 1000,  # Bitcoin genesis block date
     "SCALE": 1.0        # No additional scaling needed with adjusted constants
 }
@@ -143,6 +144,11 @@ def fetch_historical_data() -> List[Dict[str, Any]]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing data: {str(e)}")
 
+@app.get("/")
+async def root():
+    """Redirect to API documentation"""
+    return RedirectResponse(url="/docs")
+
 @app.get("/api/bitcoin-data")
 async def get_bitcoin_data():
     """Get Bitcoin price data and power law model calculations."""
@@ -182,20 +188,48 @@ async def get_deviation():
 
 @app.get("/api/forecast/{year}")
 async def get_forecast(year: int):
-    """Get price forecast for a specific year."""
+    """Get price forecast for a specific year using historical deviation patterns."""
     try:
         if year < datetime.now().year:
             raise HTTPException(status_code=400, detail="Forecast year must be in the future")
             
+        # Get historical data to analyze deviation patterns
+        historical_data = fetch_historical_data()
+        if not historical_data:
+            raise HTTPException(status_code=404, detail="No historical data available")
+            
+        # Calculate historical deviations
+        deviations = []
+        for data_point in historical_data:
+            deviation = ((data_point["actualPrice"] - data_point["modelPrice"]) / data_point["modelPrice"]) * 100
+            deviations.append(deviation)
+            
+        # Calculate average and standard deviation
+        avg_deviation = np.mean(deviations)
+        std_deviation = np.std(deviations)
+        
+        # Calculate target date and base projection
         target_date = datetime(year, 1, 1)
         days_since_start = (target_date.timestamp() * 1000 - POWER_LAW_CONSTANTS["START_DATE"]) / (1000 * 60 * 60 * 24)
-        
         base_projection = calculate_power_law_price(days_since_start)
+        
+        # Calculate bounds based on historical deviation patterns
+        # Use 1.5 standard deviations for a 90% confidence interval
+        lower_bound = base_projection * (1 + (avg_deviation - 1.5 * std_deviation) / 100)
+        upper_bound = base_projection * (1 + (avg_deviation + 1.5 * std_deviation) / 100)
+        
+        # Ensure bounds are reasonable (not negative)
+        lower_bound = max(lower_bound, 0)
+        upper_bound = max(upper_bound, lower_bound)
         
         return {
             "baseProjection": base_projection,
-            "lowerBound": base_projection * 0.7,
-            "upperBound": base_projection * 1.3
+            "lowerBound": lower_bound,
+            "upperBound": upper_bound,
+            "historicalDeviation": {
+                "average": avg_deviation,
+                "standardDeviation": std_deviation
+            }
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
