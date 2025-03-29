@@ -21,6 +21,7 @@ import { calculatePowerLawDeviation } from "@/lib/calculations"
 export default function Home() {
   const [bitcoinData, setBitcoinData] = useState<any>(null)
   const [currentPrice, setCurrentPrice] = useState<number | null>(null)
+  const [previousHalvingPrice, setPreviousHalvingPrice] = useState<number | null>(null)
   const [deviation, setDeviation] = useState<number | null>(null)
   const [timeframe, setTimeframe] = useState<string>("5Y")
   const [isLoading, setIsLoading] = useState(true)
@@ -36,6 +37,22 @@ export default function Home() {
         // Set current price
         if (data && data.prices && data.prices.length > 0) {
           setCurrentPrice(data.prices[data.prices.length - 1][1])
+        }
+
+        // Calculate previous halving price
+        if (data && data.powerLawData) {
+          const currentDate = new Date()
+          const currentYear = currentDate.getFullYear()
+          const previousHalvingYear = currentYear - 4 // Aproximadamente cada 4 años
+          
+          const previousHalvingData = data.powerLawData.find((d: any) => {
+            const dataDate = new Date(d.timestamp)
+            return dataDate.getFullYear() === previousHalvingYear
+          })
+
+          if (previousHalvingData) {
+            setPreviousHalvingPrice(previousHalvingData.actualPrice)
+          }
         }
 
         // Calculate deviation from Power Law model
@@ -62,7 +79,7 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center">
-      <Header currentPrice={currentPrice} />
+      <Header currentPrice={currentPrice} previousHalvingPrice={previousHalvingPrice} />
 
       <div className="container px-4 py-8 mx-auto">
         <DeviationAlert deviation={deviation} />

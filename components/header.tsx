@@ -5,9 +5,10 @@ import { Bitcoin } from "lucide-react"
 
 interface HeaderProps {
   currentPrice: number | null
+  previousHalvingPrice?: number | null
 }
 
-export default function Header({ currentPrice }: HeaderProps) {
+export default function Header({ currentPrice, previousHalvingPrice }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [priceClass, setPriceClass] = useState("")
 
@@ -44,7 +45,22 @@ export default function Header({ currentPrice }: HeaderProps) {
           </div>
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center gap-4">
+          {previousHalvingPrice && (
+            <div className="bg-secondary/50 rounded-full px-4 py-2 flex items-center">
+              <Bitcoin className="h-5 w-5 text-bitcoin-orange mr-2" />
+              <div>
+                <p className="text-xs text-muted-foreground">Previous Halving</p>
+                <p className="text-sm font-medium">
+                  {new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: "USD",
+                    maximumFractionDigits: 0,
+                  }).format(previousHalvingPrice)}
+                </p>
+              </div>
+            </div>
+          )}
           <div className="bg-secondary rounded-full px-4 py-2 flex items-center">
             <Bitcoin className="h-5 w-5 text-bitcoin-orange mr-2" />
             <div>
