@@ -54,12 +54,30 @@ export default function PowerLawChart({ data, timeframe, onTimeframeChange, isLo
     let filteredData = [...data.powerLawData]
     const now = new Date().getTime()
 
-    if (timeframe === "1Y") {
-      const oneYearAgo = now - 365 * 24 * 60 * 60 * 1000
-      filteredData = filteredData.filter((d: any) => d.timestamp >= oneYearAgo)
-    } else if (timeframe === "5Y") {
-      const fiveYearsAgo = now - 5 * 365 * 24 * 60 * 60 * 1000
-      filteredData = filteredData.filter((d: any) => d.timestamp >= fiveYearsAgo)
+    switch (timeframe) {
+      case "1D":
+        const oneDayAgo = now - 24 * 60 * 60 * 1000
+        filteredData = filteredData.filter((d: any) => d.timestamp >= oneDayAgo)
+        break
+      case "5D":
+        const fiveDaysAgo = now - 5 * 24 * 60 * 60 * 1000
+        filteredData = filteredData.filter((d: any) => d.timestamp >= fiveDaysAgo)
+        break
+      case "1M":
+        const oneMonthAgo = now - 30 * 24 * 60 * 60 * 1000
+        filteredData = filteredData.filter((d: any) => d.timestamp >= oneMonthAgo)
+        break
+      case "1Y":
+        const oneYearAgo = now - 365 * 24 * 60 * 60 * 1000
+        filteredData = filteredData.filter((d: any) => d.timestamp >= oneYearAgo)
+        break
+      case "5Y":
+        const fiveYearsAgo = now - 5 * 365 * 24 * 60 * 60 * 1000
+        filteredData = filteredData.filter((d: any) => d.timestamp >= fiveYearsAgo)
+        break
+      case "MAX":
+        // No filtering needed for maximum time period
+        break
     }
 
     // Prepare data for Chart.js
@@ -108,10 +126,14 @@ export default function PowerLawChart({ data, timeframe, onTimeframeChange, isLo
       x: {
         type: "time",
         time: {
-          unit: timeframe === "1Y" ? "month" : "year",
+          unit: timeframe === "1D" || timeframe === "5D" ? "hour" : 
+                timeframe === "1M" ? "day" : 
+                timeframe === "1Y" ? "month" : "year",
           displayFormats: {
-            month: "MMM yyyy", // Changed from YYYY to yyyy
-            year: "yyyy", // Changed from YYYY to yyyy
+            hour: "HH:mm",
+            day: "MMM dd",
+            month: "MMM yyyy",
+            year: "yyyy",
           },
         },
         grid: {
@@ -174,10 +196,13 @@ export default function PowerLawChart({ data, timeframe, onTimeframeChange, isLo
             {useLogScale ? "Linear Scale" : "Log Scale"}
           </Button>
           <Tabs defaultValue={timeframe} onValueChange={onTimeframeChange}>
-            <TabsList className="grid grid-cols-3 w-[180px]">
+            <TabsList className="grid grid-cols-6 w-[360px]">
+              <TabsTrigger value="1D">1D</TabsTrigger>
+              <TabsTrigger value="5D">5D</TabsTrigger>
+              <TabsTrigger value="1M">1M</TabsTrigger>
               <TabsTrigger value="1Y">1Y</TabsTrigger>
               <TabsTrigger value="5Y">5Y</TabsTrigger>
-              <TabsTrigger value="All">All</TabsTrigger>
+              <TabsTrigger value="MAX">MAX</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>

@@ -22,7 +22,7 @@ export default function Home() {
   const [bitcoinData, setBitcoinData] = useState<any>(null)
   const [currentPrice, setCurrentPrice] = useState<number | null>(null)
   const [deviation, setDeviation] = useState<number | null>(null)
-  const [timeframe, setTimeframe] = useState<string>("5Y")
+  const [timeframe, setTimeframe] = useState<string>("1Y")
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
