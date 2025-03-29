@@ -8,13 +8,14 @@ import requests
 from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
+import uvicorn
+from fastapi.responses import RedirectResponse
 
 # Load environment variables
 load_dotenv()
 
 app = FastAPI(title="Bitcoin Power Law API")
-
-# Configure CORS
+# Cigure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://localhost:3001"],  # Allow both ports
@@ -141,6 +142,11 @@ def fetch_historical_data() -> List[Dict[str, Any]]:
         raise HTTPException(status_code=500, detail=f"Error fetching data from Binance: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing data: {str(e)}")
+
+@app.get("/")
+async def root():
+    """Redirect to API documentation"""
+    return RedirectResponse(url="/docs")
 
 @app.get("/api/bitcoin-data")
 async def get_bitcoin_data():
