@@ -318,11 +318,7 @@ export default function PowerLawChart({ data, timeframe, onTimeframeChange, isLo
     },
     plugins: {
       legend: {
-        position: "top",
-        labels: {
-          usePointStyle: true,
-          boxWidth: 6,
-        },
+        display: false,
       },
       tooltip: {
         callbacks: {
