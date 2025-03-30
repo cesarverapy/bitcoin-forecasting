@@ -5,11 +5,13 @@ import { Bitcoin } from "lucide-react"
 
 interface HeaderProps {
   currentPrice: number | null
+  previousHalvingPrice: number | null
 }
 
-export default function Header({ currentPrice }: HeaderProps) {
+export default function Header({ currentPrice, previousHalvingPrice }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [priceClass, setPriceClass] = useState("")
+  const [halvingPriceClass, setHalvingPriceClass] = useState("")
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,6 +31,15 @@ export default function Header({ currentPrice }: HeaderProps) {
     }
   }, [currentPrice])
 
+  // Add a halving price change animation effect
+  useEffect(() => {
+    if (previousHalvingPrice) {
+      setHalvingPriceClass("text-bitcoin-orange")
+      const timer = setTimeout(() => setHalvingPriceClass(""), 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [previousHalvingPrice])
+
   return (
     <header
       className={`w-full z-50 transition-all duration-300 ${
@@ -44,7 +55,23 @@ export default function Header({ currentPrice }: HeaderProps) {
           </div>
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center gap-4">
+          <div className="bg-secondary rounded-full px-4 py-2 flex items-center">
+            <Bitcoin className="h-5 w-5 text-bitcoin-orange mr-2" />
+            <div>
+              <p className="text-xs text-muted-foreground">Previous Halving Price</p>
+              <p className={`text-lg font-bold transition-colors ${halvingPriceClass}`}>
+                {previousHalvingPrice
+                  ? new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "USD",
+                      maximumFractionDigits: 0,
+                    }).format(previousHalvingPrice)
+                  : "Loading..."}
+              </p>
+            </div>
+          </div>
+
           <div className="bg-secondary rounded-full px-4 py-2 flex items-center">
             <Bitcoin className="h-5 w-5 text-bitcoin-orange mr-2" />
             <div>
