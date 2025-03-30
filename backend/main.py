@@ -305,5 +305,10 @@ async def test_calculation(timestamp: int):
         "constants": POWER_LAW_CONSTANTS
     }
 
+@app.get("/api/constants")
+async def get_constants():
+    """Get the current Power Law constants."""
+    return POWER_LAW_CONSTANTS
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000) 

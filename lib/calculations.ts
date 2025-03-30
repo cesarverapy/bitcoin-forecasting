@@ -1,3 +1,5 @@
+import { fetchPowerLawConstants } from './api';
+
 // Constants for the Power Law model
 // NOTE: These calculations could be done in your Python backend instead
 const POWER_LAW_CONSTANTS = {
@@ -15,37 +17,43 @@ const POWER_LAW_CONSTANTS = {
 
 // Calculate the current deviation from the Power Law model
 // This could be calculated in your Python backend
-export function calculatePowerLawDeviation(data: any) {
+export async function calculatePowerLawDeviation(data: any) {
   if (!data || !data.powerLawData || data.powerLawData.length === 0) {
-    return null
+    return null;
   }
 
   // Get the most recent data point
-  const latestData = data.powerLawData[data.powerLawData.length - 1]
+  const latestData = data.powerLawData[data.powerLawData.length - 1];
 
   // Calculate the percentage deviation
-  const deviation = ((latestData.actualPrice - latestData.modelPrice) / latestData.modelPrice) * 100
+  const deviation = ((latestData.actualPrice - latestData.modelPrice) / latestData.modelPrice) * 100;
 
-  return deviation
+  return deviation;
 }
 
 // Calculate future price projections based on the Power Law model
 // This could be calculated in your Python backend
-export function calculateFutureProjections(year: number) {
-  const targetDate = new Date(year, 0, 1) // January 1st of the target year
-  const daysSinceStart = (targetDate.getTime() - POWER_LAW_CONSTANTS.START_DATE) / (1000 * 60 * 60 * 24)
+export async function calculateFutureProjections(year: number) {
+  try {
+    const constants = await fetchPowerLawConstants();
+    const targetDate = new Date(year, 0, 1); // January 1st of the target year
+    const daysSinceStart = (targetDate.getTime() - constants.START_DATE) / (1000 * 60 * 60 * 24);
 
-  // Calculate the base projection using the Power Law formula
-  const baseProjection = POWER_LAW_CONSTANTS.A * Math.pow(daysSinceStart, POWER_LAW_CONSTANTS.B) * POWER_LAW_CONSTANTS.SCALE
+    // Calculate the base projection using the Power Law formula
+    const baseProjection = constants.A * Math.pow(daysSinceStart, constants.B) * constants.SCALE;
 
-  // Calculate the range with 90% confidence interval
-  const lowerBound = baseProjection * 0.7 // 30% below the model
-  const upperBound = baseProjection * 1.3 // 30% above the model
+    // Calculate the range with 90% confidence interval
+    const lowerBound = baseProjection * 0.7; // 30% below the model
+    const upperBound = baseProjection * 1.3; // 30% above the model
 
-  return {
-    baseProjection,
-    lowerBound,
-    upperBound,
+    return {
+      baseProjection,
+      lowerBound,
+      upperBound,
+    };
+  } catch (error) {
+    console.error("Error calculating future projections:", error);
+    return null;
   }
 }
 
@@ -57,16 +65,16 @@ export function formatUSD(price: number) {
     currency: "USD",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(price)
+  }).format(price);
 }
 
-// Format date
-// Frontend formatting function
-export function formatDate(timestamp: number) {
-  return new Date(timestamp).toLocaleDateString("en-US", {
+// Format date - handles both Date objects and timestamps
+export function formatDate(dateOrTimestamp: Date | number) {
+  const date = dateOrTimestamp instanceof Date ? dateOrTimestamp : new Date(dateOrTimestamp);
+  return date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
-  })
+  });
 }
 
