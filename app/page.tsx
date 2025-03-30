@@ -21,6 +21,7 @@ import { calculatePowerLawDeviation } from "@/lib/calculations"
 export default function Home() {
   const [bitcoinData, setBitcoinData] = useState<any>(null)
   const [currentPrice, setCurrentPrice] = useState<number | null>(null)
+  const [previousHalvingPrice, setPreviousHalvingPrice] = useState<number | null>(null)
   const [deviation, setDeviation] = useState<number | null>(null)
   const [timeframe, setTimeframe] = useState<string>("5Y")
   const [isLoading, setIsLoading] = useState(true)
@@ -36,9 +37,18 @@ export default function Home() {
 
         if (data?.prices?.length > 0) {
           setCurrentPrice(data.prices[data.prices.length - 1][1])
+          
+          // Find the price closest to May 11, 2020 (previous halving date)
+          const previousHalvingDate = new Date("2020-05-11").getTime()
+          const closestPrice = data.prices.reduce((closest: [number, number], current: [number, number]) => {
+            const closestDiff = Math.abs(closest[0] - previousHalvingDate)
+            const currentDiff = Math.abs(current[0] - previousHalvingDate)
+            return currentDiff < closestDiff ? current : closest
+          })
+          setPreviousHalvingPrice(closestPrice[1])
         }
 
-        const dev = calculatePowerLawDeviation(data)
+        const dev = await calculatePowerLawDeviation(data)
         setDeviation(dev)
       } catch (error) {
         setError("Failed to load Bitcoin data. Please try again later.")
@@ -59,7 +69,7 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center">
-      <Header currentPrice={currentPrice} />
+      <Header currentPrice={currentPrice} previousHalvingPrice={previousHalvingPrice} />
 
       <div className="container px-4 py-8 mx-auto">
         {error && (
@@ -98,4 +108,3 @@ export default function Home() {
     </main>
   )
 }
-
