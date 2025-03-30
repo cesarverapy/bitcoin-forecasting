@@ -1,9 +1,16 @@
 // Constants for the Power Law model
 // NOTE: These calculations could be done in your Python backend instead
 const POWER_LAW_CONSTANTS = {
-  A: 0.0000058,
-  B: 5.84,
+  A: 0.0058,            // Base coefficient (calibrated to historical data)
+  B: 1.84,             // Growth exponent (determines curve steepness)
   START_DATE: new Date("2009-01-03").getTime(), // Bitcoin genesis block date
+  SCALE: 1.5,          // Final scaling factor
+  MAX_FORECAST_YEARS: 10,  // Maximum years to forecast
+  CONFIDENCE_LEVELS: {
+    "90": 1.645,       // 90% confidence interval z-score
+    "95": 1.96,        // 95% confidence interval z-score
+    "99": 2.576        // 99% confidence interval z-score
+  }
 }
 
 // Calculate the current deviation from the Power Law model
@@ -29,7 +36,7 @@ export function calculateFutureProjections(year: number) {
   const daysSinceStart = (targetDate.getTime() - POWER_LAW_CONSTANTS.START_DATE) / (1000 * 60 * 60 * 24)
 
   // Calculate the base projection using the Power Law formula
-  const baseProjection = POWER_LAW_CONSTANTS.A * Math.pow(daysSinceStart, POWER_LAW_CONSTANTS.B)
+  const baseProjection = POWER_LAW_CONSTANTS.A * Math.pow(daysSinceStart, POWER_LAW_CONSTANTS.B) * POWER_LAW_CONSTANTS.SCALE
 
   // Calculate the range with 90% confidence interval
   const lowerBound = baseProjection * 0.7 // 30% below the model

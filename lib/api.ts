@@ -1,8 +1,15 @@
 // Mock data for the Power Law model
 const POWER_LAW_CONSTANTS = {
-  A: 0.0000058,
-  B: 5.84,
+  A: 0.0058,            // Base coefficient (calibrated to historical data)
+  B: 1.84,             // Growth exponent (determines curve steepness)
   START_DATE: new Date("2009-01-03").getTime(), // Bitcoin genesis block date
+  SCALE: 1.5,          // Final scaling factor
+  MAX_FORECAST_YEARS: 10,  // Maximum years to forecast
+  CONFIDENCE_LEVELS: {
+    "90": 1.645,       // 90% confidence interval z-score
+    "95": 1.96,        // 95% confidence interval z-score
+    "99": 2.576        // 99% confidence interval z-score
+  }
 }
 
 const API_BASE_URL = "http://localhost:8000/api";
@@ -119,8 +126,8 @@ function generateMockData() {
 
   // Generate data points (one per week)
   for (let timestamp = startTimestamp; timestamp <= endTimestamp; timestamp += 7 * 24 * 60 * 60 * 1000) {
-    const daysSinceStart = (timestamp - 1230768000000) / (1000 * 60 * 60 * 24); // Bitcoin genesis block date
-    const modelPrice = 0.0000058 * Math.pow(daysSinceStart, 5.84);
+    const daysSinceStart = (timestamp - POWER_LAW_CONSTANTS.START_DATE) / (1000 * 60 * 60 * 24);
+    const modelPrice = POWER_LAW_CONSTANTS.A * Math.pow(daysSinceStart, POWER_LAW_CONSTANTS.B) * POWER_LAW_CONSTANTS.SCALE;
 
     // Add some randomness to the actual price (fluctuating around the model)
     const randomFactor = 0.7 + Math.random() * 0.6; // Between 0.7 and 1.3
