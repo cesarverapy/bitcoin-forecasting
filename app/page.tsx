@@ -24,24 +24,24 @@ export default function Home() {
   const [deviation, setDeviation] = useState<number | null>(null)
   const [timeframe, setTimeframe] = useState<string>("5Y")
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true)
+      setError(null)
       try {
-        // Fetch Bitcoin price data
         const data = await fetchBitcoinData()
         setBitcoinData(data)
 
-        // Set current price
-        if (data && data.prices && data.prices.length > 0) {
+        if (data?.prices?.length > 0) {
           setCurrentPrice(data.prices[data.prices.length - 1][1])
         }
 
-        // Calculate deviation from Power Law model
         const dev = calculatePowerLawDeviation(data)
         setDeviation(dev)
       } catch (error) {
+        setError("Failed to load Bitcoin data. Please try again later.")
         console.error("Error loading Bitcoin data:", error)
       } finally {
         setIsLoading(false)
@@ -49,10 +49,7 @@ export default function Home() {
     }
 
     loadData()
-
-    // Refresh data every 5 minutes
     const intervalId = setInterval(loadData, 5 * 60 * 1000)
-
     return () => clearInterval(intervalId)
   }, [])
 
@@ -65,6 +62,12 @@ export default function Home() {
       <Header currentPrice={currentPrice} />
 
       <div className="container px-4 py-8 mx-auto">
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
+
         <DeviationAlert deviation={deviation} />
 
         <section className="my-8">
