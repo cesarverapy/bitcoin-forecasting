@@ -69,3 +69,7 @@ The frontend is designed to work with the Python backend. The backend provides t
 ## Testing
 
 The test endpoint is available in the `tests` directory for validating power law calculations.
+
+## Future Improvements
+
+- More insights.
