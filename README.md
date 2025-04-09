@@ -66,10 +66,6 @@ The frontend is designed to work with the Python backend. The backend provides t
 - The power law model uses standardized constants across all components
 - CORS is configured to allow both localhost:3000 and localhost:3001
 
-## Testing
-
-The test endpoint is available in the `tests` directory for validating power law calculations.
-
 ## Future Improvements
 
 - More insights.
